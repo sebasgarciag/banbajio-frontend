@@ -1,10 +1,8 @@
-import { View, Text } from "react-native"
-import Home from "@/components/Home/home"
+import Home from "@/components/Home/home";
+import { Text } from "react-native";
 
-const HomePage = () => { 
-    return (
-        <Home></Home>
-    )
-}
+const HomePage = () => {
+  return <Home></Home>;
+};
 
-export default HomePage
+export default HomePage;
