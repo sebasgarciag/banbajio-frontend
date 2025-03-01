@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
+import { BANBAJIO_PURPLE, BANBAJIO_RED } from '../../constants/colors';
 
 interface TransferConfirmationScreenProps {
   onBack: () => void; // Function to navigate back to amount screen
@@ -55,7 +54,7 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={BANBAJIO_RED} barStyle="light-content" />
+      <StatusBar backgroundColor={BANBAJIO_PURPLE} barStyle="light-content" />
       
       {/* Red Header Bar */}
       <View style={styles.headerBar} />
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   headerBar: {
-    backgroundColor: BANBAJIO_RED,
+    backgroundColor: BANBAJIO_PURPLE,
     height: 5,
     width: '100%',
   },
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
     lineHeight: 38,
   },
   highlightText: {
-    color: BANBAJIO_RED,
+    color: BANBAJIO_PURPLE,
     fontWeight: 'bold',
   },
   scrollView: {

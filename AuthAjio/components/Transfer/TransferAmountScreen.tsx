@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, StatusBar, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-
-const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  TextInput,
+  StatusBar,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { BANBAJIO_RED, BANBAJIO_PURPLE } from "../../constants/colors";
 
 interface TransferAmountScreenProps {
   onBack: () => void; // Function to navigate back to contact selection
@@ -16,27 +25,27 @@ interface TransferAmountScreenProps {
   onContinue: (amount: number) => void; // Function to proceed with the transfer
 }
 
-const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({ 
-  onBack, 
-  contact, 
+const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({
+  onBack,
+  contact,
   availableBalance,
-  onContinue 
+  onContinue,
 }) => {
   // Simple string input for amount (integers only)
-  const [inputAmount, setInputAmount] = useState('');
+  const [inputAmount, setInputAmount] = useState("");
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Listen for keyboard events
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
+      "keyboardDidShow",
       () => {
         setKeyboardVisible(true);
       }
     );
     const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
+      "keyboardDidHide",
       () => {
         setKeyboardVisible(false);
       }
@@ -51,41 +60,42 @@ const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({
   // Handle amount input change - integers only
   const handleAmountChange = (text: string) => {
     // Remove any non-numeric characters
-    const numericOnly = text.replace(/[^0-9]/g, '');
+    const numericOnly = text.replace(/[^0-9]/g, "");
     setInputAmount(numericOnly);
-    
+
     // Clear error when input is empty
-    if (numericOnly === '') {
-      setErrorMessage('');
+    if (numericOnly === "") {
+      setErrorMessage("");
       return;
     }
-    
+
     // Validate the amount
     const amount = parseInt(numericOnly, 10);
     if (amount <= 0) {
-      setErrorMessage('El monto debe ser mayor a cero');
+      setErrorMessage("El monto debe ser mayor a cero");
     } else if (amount > availableBalance) {
-      setErrorMessage('No tienes suficiente saldo para esta transferencia');
+      setErrorMessage("No tienes suficiente saldo para esta transferencia");
     } else {
-      setErrorMessage('');
+      setErrorMessage("");
     }
   };
 
   // Check if the amount is valid for continuing
-  const isAmountValid = inputAmount !== '' && 
-                        parseInt(inputAmount, 10) > 0 && 
-                        parseInt(inputAmount, 10) <= availableBalance;
+  const isAmountValid =
+    inputAmount !== "" &&
+    parseInt(inputAmount, 10) > 0 &&
+    parseInt(inputAmount, 10) <= availableBalance;
 
   // Format the display value for the input
   const getDisplayValue = () => {
-    if (inputAmount === '') {
-      return '';
+    if (inputAmount === "") {
+      return "";
     }
     return `$${inputAmount}`;
   };
 
   // Format the available balance with commas for thousands (no decimals)
-  const formattedBalance = Math.floor(availableBalance).toLocaleString('en-US');
+  const formattedBalance = Math.floor(availableBalance).toLocaleString("en-US");
 
   // Handle continue button press
   const handleContinue = () => {
@@ -102,25 +112,27 @@ const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <SafeAreaView style={styles.container}>
-        <StatusBar backgroundColor={BANBAJIO_RED} barStyle="light-content" />
-        
+        <StatusBar backgroundColor={BANBAJIO_PURPLE} barStyle="light-content" />
+
         {/* Red Header Bar */}
         <View style={styles.headerBar} />
-        
+
         {/* Header with Back Button */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
         </View>
-        
+
         {/* Title */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>¿Cuánto vas a transferir?</Text>
-          <Text style={styles.balanceText}>Saldo disponible ${formattedBalance}</Text>
+          <Text style={styles.balanceText}>
+            Saldo disponible ${formattedBalance}
+          </Text>
           <Text style={styles.recipientText}>Para: {contact.name}</Text>
         </View>
-        
+
         {/* Amount Input */}
         <View style={styles.amountContainer}>
           <View style={styles.inputWrapper}>
@@ -137,18 +149,18 @@ const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({
           </View>
           <View style={styles.amountUnderline} />
         </View>
-        
+
         {/* Error Message */}
-        {errorMessage !== '' && (
+        {errorMessage !== "" && (
           <Text style={styles.errorText}>{errorMessage}</Text>
         )}
-        
+
         {/* Continue Button */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-              styles.continueButton, 
-              !isAmountValid ? styles.disabledButton : {}
+              styles.continueButton,
+              !isAmountValid ? styles.disabledButton : {},
             ]}
             onPress={handleContinue}
             disabled={!isAmountValid}
@@ -164,16 +176,16 @@ const TransferAmountScreen: React.FC<TransferAmountScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   headerBar: {
-    backgroundColor: BANBAJIO_RED,
+    backgroundColor: BANBAJIO_PURPLE,
     height: 5,
-    width: '100%',
+    width: "100%",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
@@ -187,59 +199,59 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   title: {
-    color: 'white',
+    color: "white",
     fontSize: 34,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 42,
     letterSpacing: 0.3,
   },
   balanceText: {
-    color: '#999',
+    color: "#999",
     fontSize: 18,
     marginTop: 10,
   },
   recipientText: {
-    color: '#999',
+    color: "#999",
     fontSize: 16,
     marginTop: 10,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   amountContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   currencySymbol: {
-    color: 'white',
+    color: "white",
     fontSize: 48,
-    fontWeight: '500',
+    fontWeight: "500",
     marginRight: 5,
   },
   amountInput: {
     flex: 1,
-    color: 'white',
-    fontSize: 48,
-    fontWeight: '500',
+    color: "white",
+    fontSize: 30,
+    fontWeight: "500",
     paddingVertical: 10,
   },
   amountUnderline: {
     height: 1,
-    backgroundColor: '#333',
-    width: '100%',
+    backgroundColor: "#333",
+    width: "100%",
   },
   errorText: {
-    color: '#FF4D4D',
+    color: "#FF4D4D",
     fontSize: 16,
     paddingHorizontal: 20,
     marginTop: 10,
   },
   buttonContainer: {
     padding: 20,
-    alignItems: 'flex-end',
-    position: 'absolute',
+    alignItems: "flex-end",
+    position: "absolute",
     bottom: 0,
     right: 0,
     left: 0,
@@ -249,8 +261,8 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: BANBAJIO_RED,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -258,8 +270,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   disabledButton: {
-    backgroundColor: '#666',
-  }
+    backgroundColor: "#666",
+  },
 });
 
-export default TransferAmountScreen; 
+export default TransferAmountScreen;

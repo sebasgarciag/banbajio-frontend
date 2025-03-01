@@ -5,7 +5,7 @@ import AddContactScreen from './AddContactScreen';
 import TransferAmountScreen from './TransferAmountScreen';
 import TransferConfirmationScreen from './TransferConfirmationScreen';
 
-const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
+import { BANBAJIO_PURPLE, BANBAJIO_RED } from '../../constants/colors';
 
 // Mock data for contacts
 const INITIAL_CONTACTS = [
@@ -199,7 +199,7 @@ const TransferScreen: React.FC<TransferScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={BANBAJIO_RED} barStyle="light-content" />
+      <StatusBar backgroundColor={BANBAJIO_PURPLE} barStyle="light-content" />
       
       {/* Red Header Bar */}
       <View style={styles.headerBar} />
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   headerBar: {
-    backgroundColor: BANBAJIO_RED,
+    backgroundColor: BANBAJIO_PURPLE,
     height: 5,
     width: '100%',
   },

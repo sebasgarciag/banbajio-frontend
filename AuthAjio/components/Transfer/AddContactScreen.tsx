@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
+import { BANBAJIO_RED } from '../../constants/colors';
 
 // Transfer method types
 const TRANSFER_METHODS = [

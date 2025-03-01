@@ -1,0 +1,4 @@
+const BANBAJIO_PURPLE = "#6e45a1";
+const BANBAJIO_RED = "#f70a12";
+
+export { BANBAJIO_PURPLE, BANBAJIO_RED };

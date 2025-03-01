@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, Image } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import TransferScreen from '../Transfer/TransferScreen';
+import { BANBAJIO_PURPLE, BANBAJIO_RED } from '../../constants/colors';
 
-const BANBAJIO_PURPLE = '#7A40B9';
-const BANBAJIO_RED = '#FF6B6B'; 
+
 const INITIAL_BALANCE = 100000.00; // Set initial balance to $100,000
 
 const MainPage = () => {
@@ -40,7 +40,7 @@ const MainPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={BANBAJIO_RED} barStyle="light-content" />
+      <StatusBar backgroundColor={BANBAJIO_PURPLE} barStyle="light-content" />
       
       {/* Red Banner with Logo */}
       <View style={styles.header}>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   header: {
-    backgroundColor: BANBAJIO_RED,
+    backgroundColor: BANBAJIO_PURPLE,
     height: 80,
     justifyContent: 'center',
     paddingHorizontal: 20,

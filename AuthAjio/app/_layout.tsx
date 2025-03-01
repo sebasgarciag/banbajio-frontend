@@ -4,10 +4,10 @@ import * as SplashScreen from "expo-splash-screen";
 import HomePage from "@/pages/Home/HomePage";
 import MainPage from "@/pages/Main/MainPage";
 import { StatusBar } from "react-native";
+import { BANBAJIO_PURPLE } from "@/constants/colors";
 
 import "react-native-reanimated";
 
-const BANBAJIO_PURPLE = '#7A40B9';
 
 export default function RootLayout() {
   const Stack = createStackNavigator();
