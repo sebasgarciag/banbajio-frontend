@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Sta
 import { Ionicons, MaterialCommunityIcons, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import TransferScreen from '../Transfer/TransferScreen';
 import { BANBAJIO_PURPLE, BANBAJIO_RED } from '../../constants/colors';
+import { useUsuario } from '@/wrapper/UsuarioContext';
 
 
 const INITIAL_BALANCE = 100000.00; // Set initial balance to $100,000
 
 const MainPage = () => {
+  const { usuarioSeleccionado } = useUsuario();
   const [currentScreen, setCurrentScreen] = useState('main');
   const [availableBalance, setAvailableBalance] = useState(INITIAL_BALANCE);
 

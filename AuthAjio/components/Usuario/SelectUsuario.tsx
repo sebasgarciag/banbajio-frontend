@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import UsuariosAPI from "../../api/UsuarioApi";
 import { Picker } from "@react-native-picker/picker";
+import { useUsuario } from "@/wrapper/UsuarioContext";
+import { useNavigation } from "@react-navigation/native";
 
-const SelectUsuario = ({ onUsuarioSeleccionado }) => {
+const SelectUsuario = () => {
+  const navigation = useNavigation();
   const getUsuarios = UsuariosAPI();
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState<object[]>([]);
   const [loading, setLoading] = useState(false);
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState("");
+  const { usuarioSeleccionado, setUsuarioSeleccionado } = useUsuario();
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -15,7 +18,7 @@ const SelectUsuario = ({ onUsuarioSeleccionado }) => {
       try {
         const data = await getUsuarios();
         setUsuarios(data);
-        console.log("Usuarios:", usuarios.length);
+        console.log("Usuarios:", data.length);
       } catch (error) {
         console.error("Error fetching usuarios:", error);
       } finally {
@@ -25,11 +28,11 @@ const SelectUsuario = ({ onUsuarioSeleccionado }) => {
     fetchUsuarios();
   }, []);
 
-  const handleUsuarioChange = (usuarioId) => {
-    setUsuarioSeleccionado(usuarioId);
-    const selectedUsuario = usuarios.find((user) => user.id === usuarioId);
-    onUsuarioSeleccionado(selectedUsuario);
-  };
+  const handleUsuarioChange = (itemValue: object) => {
+    setUsuarioSeleccionado(itemValue);
+    navigation.navigate("main");
+    
+  }
 
   return (
     <View style={styles.container}>
@@ -51,7 +54,7 @@ const SelectUsuario = ({ onUsuarioSeleccionado }) => {
             <Picker.Item
               key={usuario.id}
               label={usuario.nombre}
-              value={usuario.id}
+              value={usuario}
             />
           ))}
         </Picker>
