@@ -18,7 +18,6 @@ const SelectUsuario = () => {
       try {
         const data = await getUsuarios();
         setUsuarios(data);
-        console.log("Usuarios:", data.length);
       } catch (error) {
         console.error("Error fetching usuarios:", error);
       } finally {

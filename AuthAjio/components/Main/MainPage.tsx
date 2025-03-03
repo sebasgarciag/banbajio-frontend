@@ -1,33 +1,60 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, Image } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import TransferScreen from '../Transfer/TransferScreen';
-import { BANBAJIO_PURPLE, BANBAJIO_RED } from '../../constants/colors';
-import { useUsuario } from '@/wrapper/UsuarioContext';
-
-
-const INITIAL_BALANCE = 100000.00; // Set initial balance to $100,000
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Image,
+} from "react-native";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  FontAwesome,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import TransferScreen from "../Transfer/TransferScreen";
+import { BANBAJIO_PURPLE, BANBAJIO_RED } from "../../constants/colors";
+import { useUsuario } from "@/wrapper/UsuarioContext";
+import CuentasAPI from "@/api/CuentaApi";
 
 const MainPage = () => {
   const { usuarioSeleccionado } = useUsuario();
-  const [currentScreen, setCurrentScreen] = useState('main');
-  const [availableBalance, setAvailableBalance] = useState(INITIAL_BALANCE);
+  const getCuentasbyUsuarioId = CuentasAPI();
+  const [currentScreen, setCurrentScreen] = useState("main");
+  const [availableBalance, setAvailableBalance] = useState(0);
 
+  const fetchCuentas = async () => {
+    try {
+      const cuentas = await getCuentasbyUsuarioId(usuarioSeleccionado.id);
+      // Asumiendo que cuentas es un array y tomamos el balance de la primera cuenta
+      const initialBalance = cuentas.length > 0 ? cuentas[0].saldo : 0;
+      setAvailableBalance(initialBalance);
+    } catch (error) {
+      console.error("Error fetching cuentas:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCuentas();
+  }, [usuarioSeleccionado]);
   // Function to handle navigation back from TransferScreen
   const handleBackFromTransfer = () => {
-    setCurrentScreen('main');
+    setCurrentScreen("main");
   };
 
   // Function to handle completed transfers and update balance
   const handleTransferComplete = (amount: number) => {
-    setAvailableBalance(prevBalance => Math.max(0, prevBalance - amount));
+    setAvailableBalance((prevBalance) => Math.max(0, prevBalance - amount));
   };
 
   // If the current screen is 'transfer', show the TransferScreen
-  if (currentScreen === 'transfer') {
+  if (currentScreen === "transfer") {
     return (
-      <TransferScreen 
-        onBack={handleBackFromTransfer} 
+      <TransferScreen
+        onBack={handleBackFromTransfer}
         availableBalance={availableBalance}
         onTransferComplete={handleTransferComplete}
       />
@@ -35,28 +62,28 @@ const MainPage = () => {
   }
 
   // Format the balance with commas for thousands
-  const formattedBalance = availableBalance.toLocaleString('en-US', {
+  const formattedBalance = availableBalance.toLocaleString("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={BANBAJIO_PURPLE} barStyle="light-content" />
-      
+
       {/* Red Banner with Logo */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.logoBackground}>
-            <Image 
-              source={require('../../assets/images/BanBajío_Logotipo.png')} 
+            <Image
+              source={require("../../assets/images/BanBajío_Logotipo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
           </View>
         </View>
       </View>
-      
+
       <ScrollView style={styles.scrollView}>
         {/* Account Section */}
         <View style={styles.accountSection}>
@@ -70,20 +97,30 @@ const MainPage = () => {
         {/* Action Buttons - Only Recibir and Transferir */}
         <View style={styles.actionButtonsContainer}>
           <View style={styles.actionButtonColumn}>
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={[styles.actionButtonIcon, { backgroundColor: BANBAJIO_RED }]}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={fetchCuentas}
+            >
+              <View
+                style={[
+                  styles.actionButtonIcon,
+                  { backgroundColor: BANBAJIO_RED },
+                ]}
+              >
                 <FontAwesome name="money" size={32} color="white" />
               </View>
               <Text style={styles.actionButtonLabel}>Recibir</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.actionButtonColumn}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => setCurrentScreen('transfer')}
+              onPress={() => setCurrentScreen("transfer")}
             >
-              <View style={[styles.actionButtonIcon, { backgroundColor: '#333' }]}>
+              <View
+                style={[styles.actionButtonIcon, { backgroundColor: "#333" }]}
+              >
                 <Ionicons name="arrow-up-outline" size={32} color="white" />
               </View>
               <Text style={styles.actionButtonLabel}>Transferir</Text>
@@ -103,7 +140,9 @@ const MainPage = () => {
           </View>
           <View style={styles.cardInfo}>
             <Text style={styles.cardInfoText}>Fecha de corte: 16 MAR</Text>
-            <Text style={styles.cardInfoText}>Límite disponible: $45,000.00</Text>
+            <Text style={styles.cardInfoText}>
+              Límite disponible: $45,000.00
+            </Text>
           </View>
           <TouchableOpacity style={styles.deferButton}>
             <Text style={styles.deferButtonText}>Ver detalles de tarjeta</Text>
@@ -119,7 +158,9 @@ const MainPage = () => {
               </View>
               <View style={styles.myCardsTextContainer}>
                 <Text style={styles.myCardsTitle}>Mis Tarjetas</Text>
-                <Text style={styles.myCardsSubtitle}>Administra todas tus tarjetas</Text>
+                <Text style={styles.myCardsSubtitle}>
+                  Administra todas tus tarjetas
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color="white" />
             </View>
@@ -136,25 +177,25 @@ const MainPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   header: {
     backgroundColor: BANBAJIO_PURPLE,
     height: 80,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
     borderBottomWidth: 0,
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   logoBackground: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
     padding: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -170,93 +211,93 @@ const styles = StyleSheet.create({
   accountSection: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
   },
   accountHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   accountTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   accountBalance: {
-    color: 'white',
+    color: "white",
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
   },
   actionButtonColumn: {
-    alignItems: 'center',
-    width: '40%',
+    alignItems: "center",
+    width: "40%",
     marginBottom: 20,
-    position: 'relative',
+    position: "relative",
   },
   actionButton: {
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
   },
   actionButtonIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
     elevation: 6,
   },
   actionButtonLabel: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   cardSection: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   cardTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   cardDetails: {
     marginBottom: 10,
   },
   cardLabel: {
-    color: '#999',
+    color: "#999",
     fontSize: 14,
   },
   cardBalance: {
-    color: 'white',
+    color: "white",
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   cardInfo: {
     marginBottom: 20,
   },
   cardInfoText: {
-    color: '#999',
+    color: "#999",
     fontSize: 14,
     marginBottom: 5,
   },
@@ -264,51 +305,51 @@ const styles = StyleSheet.create({
     backgroundColor: BANBAJIO_RED,
     padding: 15,
     borderRadius: 25,
-    alignItems: 'center',
+    alignItems: "center",
   },
   deferButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
   },
   myCardsSection: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
   },
   myCardsButton: {
-    backgroundColor: '#222',
+    backgroundColor: "#222",
     borderRadius: 15,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
   myCardsContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   myCardsIconContainer: {
     backgroundColor: BANBAJIO_RED,
     width: 50,
     height: 50,
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 15,
   },
   myCardsTextContainer: {
     flex: 1,
   },
   myCardsTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   myCardsSubtitle: {
-    color: '#999',
+    color: "#999",
     fontSize: 14,
     marginTop: 4,
   },
@@ -317,4 +358,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MainPage; 
+export default MainPage;
