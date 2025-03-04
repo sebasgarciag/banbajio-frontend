@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Modal } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Modal, Alert, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
 
@@ -26,6 +27,10 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
   const [concept, setConcept] = useState('Transferencia');
   const [showConceptModal, setShowConceptModal] = useState(false);
   const [tempConcept, setTempConcept] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showFaceIDModal, setShowFaceIDModal] = useState(false);
+  const faceIDOpacity = useRef(new Animated.Value(0)).current;
+  const faceIDScale = useRef(new Animated.Value(0.5)).current;
   
   // Generate a random reference number (6 digits)
   const referenceNumber = Math.floor(100000 + Math.random() * 900000).toString();
@@ -51,6 +56,54 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
       setConcept(tempConcept);
     }
     setShowConceptModal(false);
+  };
+
+  // Handle authentication with Face ID
+  const handleAuthenticate = () => {
+    setIsAuthenticating(true);
+    setShowFaceIDModal(true);
+    
+    // Reset animation values
+    faceIDOpacity.setValue(0);
+    faceIDScale.setValue(0.5);
+    
+    // Animate Face ID icon appearing
+    Animated.parallel([
+      Animated.timing(faceIDOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(faceIDScale, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    // Simulate successful authentication after 2 seconds
+    setTimeout(() => {
+      // Animate Face ID success
+      Animated.parallel([
+        Animated.timing(faceIDOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(faceIDScale, {
+          toValue: 1.5,
+          duration: 500,
+          useNativeDriver: true,
+        })
+      ]).start();
+      
+      // Hide modal and proceed with transfer
+      setTimeout(() => {
+        setShowFaceIDModal(false);
+        setIsAuthenticating(false);
+        onConfirm();
+      }, 600);
+    }, 2000);
   };
 
   return (
@@ -124,8 +177,22 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
       
       {/* Confirm Button */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-          <Text style={styles.confirmButtonText}>Transferir</Text>
+        <TouchableOpacity 
+          style={styles.confirmButton} 
+          onPress={handleAuthenticate}
+          disabled={isAuthenticating}
+        >
+          <Text style={styles.confirmButtonText}>
+            {isAuthenticating ? "Autenticando..." : "Confirmar con Face ID"}
+          </Text>
+          {!isAuthenticating && (
+            <Ionicons 
+              name="scan-outline"
+              size={24} 
+              color="white" 
+              style={styles.biometricIcon} 
+            />
+          )}
         </TouchableOpacity>
         <Text style={styles.freeTransferText}>Esta transferencia es gratuita.</Text>
       </View>
@@ -167,6 +234,38 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
                 <Text style={styles.saveButtonText}>Guardar</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Custom Face ID Modal */}
+      <Modal
+        visible={showFaceIDModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.faceIDModalOverlay}>
+          <View style={styles.faceIDModalContent}>
+            <Text style={styles.faceIDTitle}>Face ID</Text>
+            <Text style={styles.faceIDSubtitle}>
+              Confirma transferencia de ${formattedAmount}
+            </Text>
+            
+            <Animated.View 
+              style={[
+                styles.faceIDIconContainer,
+                {
+                  opacity: faceIDOpacity,
+                  transform: [{ scale: faceIDScale }]
+                }
+              ]}
+            >
+              <Ionicons name="scan-outline" size={80} color="white" />
+            </Animated.View>
+            
+            <Text style={styles.faceIDInstructions}>
+              Mirando a la pantalla
+            </Text>
           </View>
         </View>
       </Modal>
@@ -271,11 +370,17 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   confirmButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+    marginRight: 10,
+  },
+  biometricIcon: {
+    marginLeft: 8,
   },
   freeTransferText: {
     color: '#999',
@@ -348,7 +453,44 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 17,
     fontWeight: '700',
-  }
+  },
+  // Face ID Modal styles
+  faceIDModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceIDModalContent: {
+    width: '80%',
+    alignItems: 'center',
+    padding: 30,
+  },
+  faceIDTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  faceIDSubtitle: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  faceIDIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 107, 107, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  faceIDInstructions: {
+    color: '#999',
+    fontSize: 16,
+  },
 });
 
 export default TransferConfirmationScreen; 

@@ -88,7 +88,7 @@ const TransferScreen: React.FC<TransferScreenProps> = ({
     
     setTransactionDate(formattedDate);
     
-    // Simulate processing time (5-10 seconds)
+    // Simulate processing time (2 seconds instead of 5)
     setTimeout(() => {
       setIsLoading(false);
       setIsTransferComplete(true);
@@ -97,7 +97,7 @@ const TransferScreen: React.FC<TransferScreenProps> = ({
       if (onTransferComplete) {
         onTransferComplete(transferAmount);
       }
-    }, 5000); // 5 seconds
+    }, 2000); // Changed from 5000 to 2000 (2 seconds)
   };
 
   // Handle going back to main page after transfer is complete
@@ -265,7 +265,7 @@ const LoadingScreen = () => {
     // Progress bar animation
     Animated.timing(progressAnimation, {
       toValue: 1,
-      duration: 5000, // 5 seconds to match the loading time
+      duration: 2000, // Changed from 5000 to 2000 (2 seconds)
       useNativeDriver: false,
       easing: Easing.linear
     }).start();

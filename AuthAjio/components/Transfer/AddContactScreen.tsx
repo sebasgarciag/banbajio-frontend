@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, TextInput } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, TextInput, Modal, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const BANBAJIO_RED = '#FF6B6B'; // Using the friendly coral-red shade
@@ -35,6 +35,10 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
   const [fullName, setFullName] = useState('');
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [showBankSelection, setShowBankSelection] = useState(false);
+  const [showFaceIDModal, setShowFaceIDModal] = useState(false);
+  const [showVerifyingModal, setShowVerifyingModal] = useState(false);
+  const faceIDOpacity = useRef(new Animated.Value(0)).current;
+  const faceIDScale = useRef(new Animated.Value(0.5)).current;
 
   // Handle method selection
   const handleMethodSelect = (methodId: string) => {
@@ -55,18 +59,67 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
       return;
     }
 
-    // Create new contact object
-    const newContact = {
-      id: Date.now().toString(),
-      initial: fullName.charAt(0).toUpperCase(),
-      name: fullName,
-      bank: BANK_ENTITIES.find(bank => bank.id === selectedBank)?.name || '',
-      account: '••••' + accountNumber.slice(-4),
-    };
+    // Show Face ID authentication first
+    setShowFaceIDModal(true);
+    
+    // Reset animation values
+    faceIDOpacity.setValue(0);
+    faceIDScale.setValue(0.5);
+    
+    // Animate Face ID icon appearing
+    Animated.parallel([
+      Animated.timing(faceIDOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(faceIDScale, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    // Simulate successful authentication after 2 seconds
+    setTimeout(() => {
+      // Animate Face ID success
+      Animated.parallel([
+        Animated.timing(faceIDOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(faceIDScale, {
+          toValue: 1.5,
+          duration: 500,
+          useNativeDriver: true,
+        })
+      ]).start();
+      
+      // Hide Face ID modal and show verifying modal
+      setTimeout(() => {
+        setShowFaceIDModal(false);
+        setShowVerifyingModal(true);
+        
+        // After 2 seconds, hide verifying modal and add contact
+        setTimeout(() => {
+          setShowVerifyingModal(false);
+          
+          // Create new contact object
+          const newContact = {
+            id: Date.now().toString(),
+            initial: fullName.charAt(0).toUpperCase(),
+            name: fullName,
+            bank: BANK_ENTITIES.find(bank => bank.id === selectedBank)?.name || '',
+            account: '••••' + accountNumber.slice(-4),
+          };
 
-    // Add contact and go back
-    onAddContact(newContact);
-    onBack();
+          // Add contact and go back
+          onAddContact(newContact);
+          onBack();
+        }, 2000);
+      }, 600);
+    }, 2000);
   };
 
   // Render method selection screen
@@ -237,6 +290,55 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
           <Ionicons name="arrow-forward" size={24} color="white" />
         </TouchableOpacity>
       </View>
+
+      {/* Custom Face ID Modal */}
+      <Modal
+        visible={showFaceIDModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.faceIDModalOverlay}>
+          <View style={styles.faceIDModalContent}>
+            <Text style={styles.faceIDTitle}>Face ID</Text>
+            <Text style={styles.faceIDSubtitle}>
+              Confirma la adición de contacto
+            </Text>
+            
+            <Animated.View 
+              style={[
+                styles.faceIDIconContainer,
+                {
+                  opacity: faceIDOpacity,
+                  transform: [{ scale: faceIDScale }]
+                }
+              ]}
+            >
+              <Ionicons name="scan-outline" size={80} color="white" />
+            </Animated.View>
+            
+            <Text style={styles.faceIDInstructions}>
+              Mirando a la pantalla
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Verifying Contact Modal */}
+      <Modal
+        visible={showVerifyingModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.verifyingModalOverlay}>
+          <View style={styles.verifyingModalContent}>
+            <ActivityIndicator size="large" color={BANBAJIO_RED} style={styles.verifyingSpinner} />
+            <Text style={styles.verifyingTitle}>Verificando contacto</Text>
+            <Text style={styles.verifyingSubtitle}>
+              Validando información bancaria...
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -347,7 +449,68 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     fontWeight: '400',
-  }
+  },
+  faceIDModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  faceIDModalContent: {
+    width: '80%',
+    alignItems: 'center',
+    padding: 30,
+  },
+  faceIDTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  faceIDSubtitle: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  faceIDIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 107, 107, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  faceIDInstructions: {
+    color: '#999',
+    fontSize: 16,
+  },
+  verifyingModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyingModalContent: {
+    width: '80%',
+    alignItems: 'center',
+    padding: 30,
+  },
+  verifyingSpinner: {
+    marginBottom: 20,
+  },
+  verifyingTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  verifyingSubtitle: {
+    color: '#999',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
 
 export default AddContactScreen; 
