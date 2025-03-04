@@ -6,32 +6,20 @@ import { useUsuario } from "@/wrapper/UsuarioContext";
 import { useNavigation } from "@react-navigation/native";
 
 const SelectUsuario = () => {
+ // const navigation = useNavigation();
+  //const getUsuarios = UsuariosAPI();
   const navigation = useNavigation();
-  const getUsuarios = UsuariosAPI();
-  const [usuarios, setUsuarios] = useState<object[]>([]);
+  const [usuarios, setUsuarios] = useState<object[]>([
+    { id: 0, nombre: "Alejandro Robles", tipoVal: 1 },
+    { id: 1, nombre: "Sebastián García", tipoVal: 2 },
+  ]);
   const [loading, setLoading] = useState(false);
   const { usuarioSeleccionado, setUsuarioSeleccionado } = useUsuario();
-
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      setLoading(true);
-      try {
-        const data = await getUsuarios();
-        setUsuarios(data);
-      } catch (error) {
-        console.error("Error fetching usuarios:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsuarios();
-  }, []);
 
   const handleUsuarioChange = (itemValue: object) => {
     setUsuarioSeleccionado(itemValue);
     navigation.navigate("main");
-    
-  }
+  };
 
   return (
     <View style={styles.container}>

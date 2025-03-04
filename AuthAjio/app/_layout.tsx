@@ -7,6 +7,7 @@ import SelectUsuarioPage from "@/pages/Usuario/SelectUsuarioPage";
 import { StatusBar } from "react-native";
 import { BANBAJIO_PURPLE } from "@/constants/colors";
 import { UsuarioProvider } from "@/wrapper/UsuarioContext";
+import TwoFA from "@/components/2FA/2FA";
 
 import "react-native-reanimated";
 
@@ -31,6 +32,11 @@ export default function RootLayout() {
           <Stack.Screen
             name="selectUsuario"
             component={SelectUsuarioPage}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="2FA"
+            component={TwoFA}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

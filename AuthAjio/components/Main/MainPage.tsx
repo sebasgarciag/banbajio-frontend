@@ -18,31 +18,28 @@ import {
 import TransferScreen from "../Transfer/TransferScreen";
 import { BANBAJIO_PURPLE, BANBAJIO_RED } from "../../constants/colors";
 import { useUsuario } from "@/wrapper/UsuarioContext";
-import CuentasAPI from "@/api/CuentaApi";
+import { useNavigation } from "expo-router";
+import TwoFA from "../2FA/2FA";
 
 const MainPage = () => {
   const { usuarioSeleccionado } = useUsuario();
-  const getCuentasbyUsuarioId = CuentasAPI();
+  const navigation = useNavigation();
+  const INITIAL_BALANCE = 100000.0;
+  // const getCuentasbyUsuarioId = CuentasAPI();
   const [currentScreen, setCurrentScreen] = useState("main");
-  const [availableBalance, setAvailableBalance] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(INITIAL_BALANCE);
 
-  const fetchCuentas = async () => {
-    try {
-      const cuentas = await getCuentasbyUsuarioId(usuarioSeleccionado.id);
-      // Asumiendo que cuentas es un array y tomamos el balance de la primera cuenta
-      const initialBalance = cuentas.length > 0 ? cuentas[0].saldo : 0;
-      setAvailableBalance(initialBalance);
-    } catch (error) {
-      console.error("Error fetching cuentas:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCuentas();
-  }, [usuarioSeleccionado]);
   // Function to handle navigation back from TransferScreen
   const handleBackFromTransfer = () => {
     setCurrentScreen("main");
+  };
+
+  const handleValidation = () => { 
+    if(usuarioSeleccionado.tipoVal === 1){
+      setCurrentScreen("2FA");
+    } else {
+      setCurrentScreen("transfer");
+    }
   };
 
   // Function to handle completed transfers and update balance
@@ -50,16 +47,31 @@ const MainPage = () => {
     setAvailableBalance((prevBalance) => Math.max(0, prevBalance - amount));
   };
 
-  // If the current screen is 'transfer', show the TransferScreen
-  if (currentScreen === "transfer") {
-    return (
-      <TransferScreen
-        onBack={handleBackFromTransfer}
-        availableBalance={availableBalance}
-        onTransferComplete={handleTransferComplete}
-      />
-    );
-  }
+  const handleAuthComplete = () => {
+    setCurrentScreen("transfer");
+  };
+
+ if (currentScreen === "2FA") {
+   return (
+     <TwoFA
+       onBack={handleBackFromTransfer}
+       availableBalance={availableBalance}
+       onTransferComplete={handleTransferComplete}
+       onAuthComplete={handleAuthComplete}
+     />
+   );
+ }
+
+ // If the current screen is 'transfer', show the TransferScreen
+ if (currentScreen === "transfer") {
+   return (
+     <TransferScreen
+       onBack={handleBackFromTransfer}
+       availableBalance={availableBalance}
+       onTransferComplete={handleTransferComplete}
+     />
+   );
+ }
 
   // Format the balance with commas for thousands
   const formattedBalance = availableBalance.toLocaleString("en-US", {
@@ -97,10 +109,7 @@ const MainPage = () => {
         {/* Action Buttons - Only Recibir and Transferir */}
         <View style={styles.actionButtonsContainer}>
           <View style={styles.actionButtonColumn}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={fetchCuentas}
-            >
+            <TouchableOpacity style={styles.actionButton}>
               <View
                 style={[
                   styles.actionButtonIcon,
@@ -116,7 +125,7 @@ const MainPage = () => {
           <View style={styles.actionButtonColumn}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => setCurrentScreen("transfer")}
+              onPress={handleValidation}
             >
               <View
                 style={[styles.actionButtonIcon, { backgroundColor: "#333" }]}
