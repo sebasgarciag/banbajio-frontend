@@ -22,12 +22,14 @@ interface TransferScreenProps {
   onBack: () => void; // Function to navigate back to MainPage
   availableBalance: number; // Available balance for transfers
   onTransferComplete?: (amount: number) => void; // Function to update balance after transfer
+  securityMethod: 'biometry' | '2fa'; // Security method selected by the user
 }
 
 const TransferScreen: React.FC<TransferScreenProps> = ({ 
   onBack, 
   availableBalance,
-  onTransferComplete 
+  onTransferComplete,
+  securityMethod
 }) => {
   const [contacts, setContacts] = useState(INITIAL_CONTACTS);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -169,6 +171,7 @@ const TransferScreen: React.FC<TransferScreenProps> = ({
       <AddContactScreen 
         onBack={() => setShowAddContact(false)} 
         onAddContact={handleAddContact} 
+        securityMethod={securityMethod}
       />
     );
   }
@@ -181,6 +184,7 @@ const TransferScreen: React.FC<TransferScreenProps> = ({
         onConfirm={handleConfirmTransfer}
         amount={transferAmount}
         contact={selectedContact}
+        securityMethod={securityMethod}
       />
     );
   }

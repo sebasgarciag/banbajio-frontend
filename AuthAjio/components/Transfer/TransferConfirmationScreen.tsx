@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Modal, Alert, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, TextInput, Modal, Alert, Image, Animated, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 
@@ -15,13 +15,15 @@ interface TransferConfirmationScreenProps {
     bank: string;
     account: string;
   };
+  securityMethod: 'biometry' | '2fa'; // Security method selected by the user
 }
 
 const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
   onBack,
   onConfirm,
   amount,
-  contact
+  contact,
+  securityMethod
 }) => {
   // State for concept editing
   const [concept, setConcept] = useState('Transferencia');
@@ -29,6 +31,8 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
   const [tempConcept, setTempConcept] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showFaceIDModal, setShowFaceIDModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
   const faceIDOpacity = useRef(new Animated.Value(0)).current;
   const faceIDScale = useRef(new Animated.Value(0.5)).current;
   
@@ -59,7 +63,7 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
   };
 
   // Handle authentication with Face ID
-  const handleAuthenticate = () => {
+  const handleBiometricAuth = () => {
     setIsAuthenticating(true);
     setShowFaceIDModal(true);
     
@@ -104,6 +108,46 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
         onConfirm();
       }, 600);
     }, 2000);
+  };
+
+  // Handle 2FA authentication
+  const handle2FAAuth = () => {
+    // Reset authentication state first
+    setIsAuthenticating(false);
+    setShow2FAModal(true);
+    
+    // Generate a random 6-digit code but don't display it
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setVerificationCode(randomCode);
+  };
+
+  // Handle sending verification code
+  const handleSendCode = () => {
+    // In a real app, this would call an API to send the code
+    // No alert, just simulate sending silently
+  };
+
+  // Handle verification code submission
+  const handleVerifyCode = () => {
+    // Show verification in progress
+    setIsAuthenticating(true);
+    
+    // Simulate verification process with a delay
+    setTimeout(() => {
+      // Complete verification and proceed
+      setIsAuthenticating(false);
+      setShow2FAModal(false);
+      onConfirm();
+    }, 2000); // 2 second delay, similar to Face ID
+  };
+
+  // Handle authentication based on selected method
+  const handleAuthenticate = () => {
+    if (securityMethod === 'biometry') {
+      handleBiometricAuth();
+    } else {
+      handle2FAAuth();
+    }
   };
 
   return (
@@ -183,11 +227,12 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
           disabled={isAuthenticating}
         >
           <Text style={styles.confirmButtonText}>
-            {isAuthenticating ? "Autenticando..." : "Confirmar con Face ID"}
+            {isAuthenticating ? "Autenticando..." : 
+              securityMethod === 'biometry' ? "Confirmar con Face ID" : "Confirmar con código"}
           </Text>
           {!isAuthenticating && (
             <Ionicons 
-              name="scan-outline"
+              name={securityMethod === 'biometry' ? "scan-outline" : "key-outline"}
               size={24} 
               color="white" 
               style={styles.biometricIcon} 
@@ -248,9 +293,8 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
           <View style={styles.faceIDModalContent}>
             <Text style={styles.faceIDTitle}>Face ID</Text>
             <Text style={styles.faceIDSubtitle}>
-              Confirma transferencia de ${formattedAmount}
+              Autenticando con reconocimiento facial
             </Text>
-            
             <Animated.View 
               style={[
                 styles.faceIDIconContainer,
@@ -262,10 +306,55 @@ const TransferConfirmationScreen: React.FC<TransferConfirmationScreenProps> = ({
             >
               <Ionicons name="scan-outline" size={80} color="white" />
             </Animated.View>
-            
-            <Text style={styles.faceIDInstructions}>
-              Mirando a la pantalla
+          </View>
+        </View>
+      </Modal>
+
+      {/* 2FA Verification Modal */}
+      <Modal
+        visible={show2FAModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Verificación de dos factores</Text>
+            <Text style={styles.modalSubtitle}>
+              Para confirmar esta operación, necesitamos verificar tu identidad
             </Text>
+            
+            <TouchableOpacity 
+              style={styles.sendCodeButton} 
+              onPress={handleSendCode}
+              disabled={isAuthenticating}
+            >
+              <Text style={styles.sendCodeButtonText}>Enviar código</Text>
+            </TouchableOpacity>
+            
+            <TextInput
+              style={styles.codeInput}
+              placeholder="Ingresa el código"
+              placeholderTextColor="#999"
+              keyboardType="number-pad"
+              maxLength={6}
+              selectionColor={BANBAJIO_RED}
+              editable={!isAuthenticating}
+            />
+            
+            <TouchableOpacity 
+              style={[styles.verifyButton, isAuthenticating && styles.disabledButton]} 
+              onPress={handleVerifyCode}
+              disabled={isAuthenticating}
+            >
+              {isAuthenticating ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="white" style={styles.loadingIndicator} />
+                  <Text style={styles.verifyButtonText}>Verificando...</Text>
+                </View>
+              ) : (
+                <Text style={styles.verifyButtonText}>Verificar</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -490,6 +579,73 @@ const styles = StyleSheet.create({
   faceIDInstructions: {
     color: '#999',
     fontSize: 16,
+  },
+  codeContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  verificationCode: {
+    color: BANBAJIO_RED,
+    fontSize: 32,
+    fontWeight: 'bold',
+    letterSpacing: 5,
+  },
+  codeHelperText: {
+    color: '#999',
+    fontSize: 12,
+    marginTop: 5,
+    fontStyle: 'italic',
+  },
+  codeInput: {
+    backgroundColor: '#222',
+    borderRadius: 8,
+    color: 'white',
+    fontSize: 18,
+    padding: 15,
+    marginBottom: 20,
+    textAlign: 'center',
+    letterSpacing: 5,
+  },
+  verifyButton: {
+    backgroundColor: BANBAJIO_RED,
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+  },
+  verifyButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalSubtitle: {
+    color: '#CCC',
+    fontSize: 16,
+    marginTop: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  sendCodeButton: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sendCodeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingIndicator: {
+    marginRight: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#555',
   },
 });
 

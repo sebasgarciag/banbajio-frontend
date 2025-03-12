@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StatusBar, Image } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import TransferScreen from '../Transfer/TransferScreen';
+import { useRoute } from '@react-navigation/native';
 
 const BANBAJIO_PURPLE = '#7A40B9';
 const BANBAJIO_RED = '#FF6B6B'; 
@@ -10,6 +11,12 @@ const INITIAL_BALANCE = 100000.00; // Set initial balance to $100,000
 const MainPage = () => {
   const [currentScreen, setCurrentScreen] = useState('main');
   const [availableBalance, setAvailableBalance] = useState(INITIAL_BALANCE);
+  const route = useRoute<any>();
+  
+  // Get security method from route params or default to biometry
+  const [securityMethod, setSecurityMethod] = useState<'biometry' | '2fa'>(
+    route.params?.securityMethod || 'biometry'
+  );
 
   // Function to handle navigation back from TransferScreen
   const handleBackFromTransfer = () => {
@@ -28,6 +35,7 @@ const MainPage = () => {
         onBack={handleBackFromTransfer} 
         availableBalance={availableBalance}
         onTransferComplete={handleTransferComplete}
+        securityMethod={securityMethod}
       />
     );
   }
@@ -63,6 +71,9 @@ const MainPage = () => {
             <Ionicons name="chevron-forward" size={24} color="white" />
           </View>
           <Text style={styles.accountBalance}>${formattedBalance}</Text>
+          <Text style={styles.securityMethodText}>
+            Método de seguridad: {securityMethod === 'biometry' ? 'Biometría' : 'Autenticación de dos factores'}
+          </Text>
         </View>
 
         {/* Action Buttons - Only Recibir and Transferir */}
@@ -185,6 +196,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 32,
     fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  securityMethodText: {
+    color: '#AAA',
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -251,7 +268,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cardInfo: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   cardInfoText: {
     color: '#999',
@@ -259,14 +276,15 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   deferButton: {
-    backgroundColor: BANBAJIO_RED,
-    padding: 15,
-    borderRadius: 25,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   deferButtonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '500',
   },
   myCardsSection: {
     padding: 20,
@@ -274,25 +292,20 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
   },
   myCardsButton: {
-    backgroundColor: '#222',
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   myCardsContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 20,
   },
   myCardsIconContainer: {
-    backgroundColor: BANBAJIO_RED,
     width: 50,
     height: 50,
     borderRadius: 25,
+    backgroundColor: '#333',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -304,14 +317,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
   myCardsSubtitle: {
     color: '#999',
     fontSize: 14,
-    marginTop: 4,
   },
   bottomSpace: {
-    height: 30,
+    height: 40,
   },
 });
 

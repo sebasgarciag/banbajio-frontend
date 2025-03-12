@@ -26,9 +26,10 @@ const BANK_ENTITIES = [
 interface AddContactScreenProps {
   onBack: () => void; // Function to navigate back to TransferScreen
   onAddContact: (contact: any) => void; // Function to add a new contact
+  securityMethod: 'biometry' | '2fa'; // Security method selected by the user
 }
 
-const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContact }) => {
+const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContact, securityMethod }) => {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showMethodSelection, setShowMethodSelection] = useState(true);
   const [accountNumber, setAccountNumber] = useState('');
@@ -36,9 +37,12 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [showBankSelection, setShowBankSelection] = useState(false);
   const [showFaceIDModal, setShowFaceIDModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
   const [showVerifyingModal, setShowVerifyingModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
   const faceIDOpacity = useRef(new Animated.Value(0)).current;
   const faceIDScale = useRef(new Animated.Value(0.5)).current;
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Handle method selection
   const handleMethodSelect = (methodId: string) => {
@@ -52,14 +56,8 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
     setShowBankSelection(false);
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    if (!selectedMethod || !accountNumber || !fullName || !selectedBank) {
-      // Form validation would go here
-      return;
-    }
-
-    // Show Face ID authentication first
+  // Handle biometric authentication
+  const handleBiometricAuth = () => {
     setShowFaceIDModal(true);
     
     // Reset animation values
@@ -120,6 +118,70 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
         }, 2000);
       }, 600);
     }, 2000);
+  };
+
+  // Handle 2FA authentication
+  const handle2FAAuth = () => {
+    // Reset authentication state first
+    setIsAuthenticating(false);
+    setShow2FAModal(true);
+    
+    // Generate a random 6-digit code but don't display it
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setVerificationCode(randomCode);
+  };
+
+  // Handle sending verification code
+  const handleSendCode = () => {
+    // In a real app, this would call an API to send the code
+    // No alert, just simulate sending silently
+  };
+
+  // Handle verification code submission
+  const handleVerifyCode = () => {
+    // Show verification in progress
+    setIsAuthenticating(true);
+    
+    // Simulate verification process with a delay
+    setTimeout(() => {
+      // Hide 2FA modal and show verifying modal
+      setIsAuthenticating(false);
+      setShow2FAModal(false);
+      setShowVerifyingModal(true);
+      
+      // After 2 seconds, hide verifying modal and add contact
+      setTimeout(() => {
+        setShowVerifyingModal(false);
+        
+        // Create new contact object
+        const newContact = {
+          id: Date.now().toString(),
+          initial: fullName.charAt(0).toUpperCase(),
+          name: fullName,
+          bank: BANK_ENTITIES.find(bank => bank.id === selectedBank)?.name || '',
+          account: '••••' + accountNumber.slice(-4),
+        };
+
+        // Add contact and go back
+        onAddContact(newContact);
+        onBack();
+      }, 2000);
+    }, 2000); // 2 second delay, similar to Face ID
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    if (!selectedMethod || !accountNumber || !fullName || !selectedBank) {
+      // Form validation would go here
+      return;
+    }
+
+    // Use the appropriate authentication method
+    if (securityMethod === 'biometry') {
+      handleBiometricAuth();
+    } else {
+      handle2FAAuth();
+    }
   };
 
   // Render method selection screen
@@ -339,6 +401,55 @@ const AddContactScreen: React.FC<AddContactScreenProps> = ({ onBack, onAddContac
           </View>
         </View>
       </Modal>
+
+      {/* Add the 2FA Modal */}
+      <Modal
+        visible={show2FAModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Verificación de dos factores</Text>
+            <Text style={styles.modalSubtitle}>
+              Para agregar este contacto, necesitamos verificar tu identidad
+            </Text>
+            
+            <TouchableOpacity 
+              style={styles.sendCodeButton} 
+              onPress={handleSendCode}
+              disabled={isAuthenticating}
+            >
+              <Text style={styles.sendCodeButtonText}>Enviar código</Text>
+            </TouchableOpacity>
+            
+            <TextInput
+              style={styles.codeInput}
+              placeholder="Ingresa el código"
+              placeholderTextColor="#999"
+              keyboardType="number-pad"
+              maxLength={6}
+              selectionColor={BANBAJIO_RED}
+              editable={!isAuthenticating}
+            />
+            
+            <TouchableOpacity 
+              style={[styles.verifyButton, isAuthenticating && styles.disabledButton]} 
+              onPress={handleVerifyCode}
+              disabled={isAuthenticating}
+            >
+              {isAuthenticating ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="white" style={styles.loadingIndicator} />
+                  <Text style={styles.verifyButtonText}>Verificando...</Text>
+                </View>
+              ) : (
+                <Text style={styles.verifyButtonText}>Verificar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -442,7 +553,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   disabledButton: {
-    backgroundColor: '#666',
+    backgroundColor: '#555',
   },
   inputHelperText: {
     color: '#999',
@@ -510,6 +621,72 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 16,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 20,
+    width: '85%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    color: '#CCC',
+    fontSize: 16,
+    marginTop: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  codeInput: {
+    backgroundColor: '#222',
+    borderRadius: 8,
+    color: 'white',
+    fontSize: 18,
+    padding: 15,
+    marginBottom: 20,
+    textAlign: 'center',
+    letterSpacing: 5,
+  },
+  verifyButton: {
+    backgroundColor: BANBAJIO_RED,
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+  },
+  verifyButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  sendCodeButton: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sendCodeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingIndicator: {
+    marginRight: 10,
   },
 });
 
